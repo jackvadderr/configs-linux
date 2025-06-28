@@ -93,23 +93,48 @@ if [ -n "$force_color_prompt" ]; then
     fi
 fi
 
+# ~/.zshrc
+
 configure_prompt() {
-    # Define símbolos (√ para root, λ para usuário normal)
-    local prompt_symbol="λ"
-    [ "$EUID" -eq 0 ] && prompt_symbol="√"
+  # Símbolo: √ para root, λ para usuário normal
+  local prompt_symbol="λ"
+  [ "$EUID" -eq 0 ] && prompt_symbol="√"
 
-    # Formato do horário (HH:MM:SS)
-    local time='%D{%H:%M:%S}'
+  # Hora atual
+  local time_format='%D{%H:%M:%S}'
 
-    # Estrutura do prompt CORRIGIDA
+  # IP local
+  local ip_addr
+  ip_addr=$(ip route get 1.1.1.1 2>/dev/null | awk '{for(i=1;i<=NF;i++) if($i=="src") print $(i+1)}')
+  [ -z "$ip_addr" ] && ip_addr="N/A"
 
-    PROMPT=$'%F{green}┌─(%F{blue}'$prompt_symbol$' %F{cyan}%n%F{white}|%F{cyan}%m%F{green})─(%F{yellow}'$time$'%F{green})─[%F{blue}%~%F{green}]\n%F{green}└─%F{red}%#%f '
-    # Right prompt vazio
-    RPROMPT=''
+  # Contagem de jobs em segundo plano
+  local jobs_count="$(jobs -p | wc -l | tr -d ' ')"
+  [ "$jobs_count" -gt 0 ] || jobs_count="0"  # Garante que seja 0 quando não houver jobs
+
+  # Função para obter branch git com colchetes fixos
+  git_branch() {
+    local branch
+    branch=$(git branch --show-current 2>/dev/null)
+    if [ -n "$branch" ]; then
+      echo "%F{magenta}GIT:${branch}%f"
+    else
+      echo ""
+    fi
+  }
+
+  # Construção do PROMPT com contagem de jobs
+  PROMPT=$'%F{green}╭─── %F{blue}'$prompt_symbol' %F{cyan}%n@%m %F{blue}'$prompt_symbol' %F{green}──[%F{yellow}'$time_format$'%F{green}]─[$(git_branch)%F{green}]─[]───\n'
+  PROMPT+=$'%F{green}│  IP: '$ip_addr$'  %F{red}JOBS:'$jobs_count$'%f\n'
+  PROMPT+=$'%F{green}╰──────────────────────────────────\n'
+  PROMPT+=$'%F{cyan}%~ ➤%f '
+  
+  RPROMPT=''
 }
 
-# Ativa a configuração
-configure_prompt
+# Atualizar o prompt a cada comando
+autoload -Uz add-zsh-hook
+add-zsh-hook precmd configure_prompt
 
 # The following block is surrounded by two delimiters.
 # These delimiters must not be modified. Thanks.
