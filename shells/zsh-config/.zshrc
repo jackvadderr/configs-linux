@@ -93,8 +93,6 @@ if [ -n "$force_color_prompt" ]; then
     fi
 fi
 
-# ~/.zshrc
-
 configure_prompt() {
   # Símbolo: √ para root, λ para usuário normal
   local prompt_symbol="λ"
@@ -108,10 +106,6 @@ configure_prompt() {
   ip_addr=$(ip route get 1.1.1.1 2>/dev/null | awk '{for(i=1;i<=NF;i++) if($i=="src") print $(i+1)}')
   [ -z "$ip_addr" ] && ip_addr="N/A"
 
-  # Contagem de jobs em segundo plano
-  local jobs_count="$(jobs -p | wc -l | tr -d ' ')"
-  [ "$jobs_count" -gt 0 ] || jobs_count="0"  # Garante que seja 0 quando não houver jobs
-
   # Função para obter branch git com colchetes fixos
   git_branch() {
     local branch
@@ -123,9 +117,9 @@ configure_prompt() {
     fi
   }
 
-  # Construção do PROMPT com contagem de jobs
+  # Construção do PROMPT
   PROMPT=$'%F{green}╭─── %F{blue}'$prompt_symbol' %F{cyan}%n@%m %F{blue}'$prompt_symbol' %F{green}──[%F{yellow}'$time_format$'%F{green}]─[$(git_branch)%F{green}]─[]───\n'
-  PROMPT+=$'%F{green}│  IP: '$ip_addr$'  %F{red}JOBS:'$jobs_count$'%f\n'
+  PROMPT+=$'%F{green}│  IP: '$ip_addr$'\n'
   PROMPT+=$'%F{green}╰──────────────────────────────────\n'
   PROMPT+=$'%F{cyan}%~ ➤%f '
   
