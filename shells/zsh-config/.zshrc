@@ -93,7 +93,12 @@ if [ -n "$force_color_prompt" ]; then
     fi
 fi
 
+# ~/.zshrc
+
 configure_prompt() {
+  # Capturar status do último comando antes de qualquer operação
+  local last_status=$?
+  
   # Símbolo: √ para root, λ para usuário normal
   local prompt_symbol="λ"
   [ "$EUID" -eq 0 ] && prompt_symbol="√"
@@ -117,11 +122,14 @@ configure_prompt() {
     fi
   }
 
-  # Construção do PROMPT
-  PROMPT=$'%F{green}╭─── %F{blue}'$prompt_symbol' %F{cyan}%n@%m %F{blue}'$prompt_symbol' %F{green}──[%F{yellow}'$time_format$'%F{green}]─[$(git_branch)%F{green}]─[]───\n'
+  # Símbolo de status baseado no último comando
+  local status_symbol="%F{green}➤%f"  # Novo símbolo para sucesso
+  [ $last_status -ne 0 ] && status_symbol="%F{red}✗%f"  # ✗ para erro
+
+  # Construção do PROMPT com indicador de status
+  PROMPT=$'%F{green}╭─── %F{blue}'$prompt_symbol' %F{cyan}%n@%m %F{blue}'$prompt_symbol' %F{green}──[%F{yellow}'$time_format$'%F{green}]─[$(git_branch)%F{green}]─[]\n'
   PROMPT+=$'%F{green}│  IP: '$ip_addr$'\n'
-  PROMPT+=$'%F{green}╰──────────────────────────────────\n'
-  PROMPT+=$'%F{cyan}%~ ➤%f '
+  PROMPT+=$'%F{green}╰[%F{cyan}%~%F{green}] '$status_symbol$' '
   
   RPROMPT=''
 }
